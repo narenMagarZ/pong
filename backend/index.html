@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Client</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #messages {
+            height: 300px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        #form {
+            display: flex;
+        }
+        #input {
+            flex-grow: 1;
+            padding: 5px;
+            margin-right: 5px;
+        }
+        .status {
+            color: #999;
+            font-style: italic;
+        }
+        .message {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebSocket Chat</h1>
+    <div id="messages"></div>
+    <form id="form">
+        <input type="text" id="input" placeholder="Type a message and press Enter" />
+        <button type="submit">Send</button>
+    </form>
+
+    <script>
+        const messagesDiv = document.getElementById('messages');
+        const form = document.getElementById('form');
+        const input = document.getElementById('input');
+        
+        // Create WebSocket connection
+        const socket = new WebSocket(`ws://${window.location.host}/ws`);
+        
+        // Connection opened
+        socket.addEventListener('open', (event) => {
+            addMessage('Connected to the server', 'status');
+        });
+        
+        // Listen for messages
+        socket.addEventListener('message', (event) => {
+            addMessage(`Received: ${event.data}`);
+        });
+        
+        // Connection closed
+        socket.addEventListener('close', (event) => {
+            addMessage('Disconnected from the server', 'status');
+        });
+        
+        // Connection error
+        socket.addEventListener('error', (event) => {
+            addMessage('WebSocket error', 'status');
+        });
+        
+        // Send message
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (input.value) {
+                socket.send(input.value);
+                addMessage(`Sent: ${input.value}`);
+                input.value = '';
+            }
+        });
+        
+        // Add message to the UI
+        function addMessage(text, className = 'message') {
+            const message = document.createElement('div');
+            message.textContent = text;
+            message.className = className;
+            messagesDiv.appendChild(message);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+    </script>
+</body>
+</html>

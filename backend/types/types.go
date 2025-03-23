@@ -64,7 +64,3 @@ type GameMessage struct {
 	Type MessageType `json:"type"`
 	Payload GamePayload `json:"payload"`
 }
-
-func Test() {
-	
-}

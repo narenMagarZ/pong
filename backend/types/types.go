@@ -19,6 +19,7 @@ type MessageType string;
 const (
 	GameType MessageType = "gameType"
 	CommonType MessageType = "commonType"
+	PaddleDisplacement int = 10
 )
 
 type Message struct {

@@ -13,7 +13,7 @@ func Game(message types.GameMessage, connections map[int]*websocket.Conn) types.
 		ball.Dx = -ball.Dx;
 	}
 
-	rightPaddle.Y = ball.Y - 10;
+	rightPaddle.Y = ball.Y - types.PaddleDisplacement;
 
 	ranges := []int{leftPaddle.Y, leftPaddle.Y + leftPaddle.Height}
 

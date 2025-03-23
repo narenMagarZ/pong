@@ -73,7 +73,10 @@
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             if (input.value) {
-                socket.send(input.value);
+                socket.send({
+                    id: 1,
+                    message: input.value
+                });
                 addMessage(`Sent: ${input.value}`);
                 input.value = '';
             }

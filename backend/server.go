@@ -128,7 +128,7 @@ func Server() {
 		w.WriteHeader(http.StatusAccepted);
 		json.NewEncoder(w).Encode(users);
 	});
-	fmt.Println("Server is running on http://localhost:8088")
+	fmt.Println("Server is running on http://localhost:5000")
 }
 
 // func PlayWithTime() {

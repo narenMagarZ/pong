@@ -5,17 +5,25 @@ import (
 	// "log"
 	"net/http"
 	"fly-and-fight-server/ws"
+	"github.com/rs/cors"
 )
 
 
 func main() {
-	http.HandleFunc("/ws", func (w http.ResponseWriter, r *http.Request)  {
+
+	cors := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"*"},
+	});
+	mux := http.NewServeMux();
+	mux.HandleFunc("/ws", func (w http.ResponseWriter, r *http.Request)  {
 		ws.WebsocketServer(w, r);
 	})
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "index.html")
 	})
-	Server();
+	handler := cors.Handler(mux);
 	fmt.Println("Server started successfully");
-	http.ListenAndServe(":8088", nil)
+	http.ListenAndServe(":8088", handler);
 }

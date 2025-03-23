@@ -5,40 +5,17 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
 	"github.com/gorilla/websocket"
+	"fly-and-fight-server/types"
 )
 
-// first players connected to game
-// match making by server
-// this can be done by specific alogrithm based on the history of user/player
 
-// position of ball is calculate at the server, then broadcast to the both player
-
-// syntax to create map in go
-// make(map[key-type]value-type)
-
-type Player struct{
-	Id int `json:"id"`
-	Socket websocket.Conn `json:"socket"`
-}
-
-type Match struct {
-	Id int `json:"id"`
-	Status string `json:"status"`
-	Players []Player `json:"players"`
-}
 
 var (
 	players = make(map[int]*websocket.Conn)
 	clientCounter = 0
-	matches = make(map[int]Match)
+	matches = make(map[int]types.Match)
 );
-
-
-func ReadClientMessage(clientId int) {
-
-}
 
 func BroadcastBallPosition(matchId int) {
 	match := matches[matchId]
@@ -55,15 +32,16 @@ func BroadcastBallPosition(matchId int) {
 	}
 }
 
-func WriteClientMessage(clientId int, message string) {
-	client := players[clientId];
-	client.WriteMessage(websocket.TextMessage, []byte(message));
-}
+
 
 func WebsocketServer(w http.ResponseWriter, r *http.Request) {
 	var upgrader = websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
-			return true;
+			allowedOrigins := map[string]bool{
+				"http://localhost:5173": true,
+				"http://localhost:8088": true,
+			}
+			return allowedOrigins[r.Header.Get("Origin")]
 		},
 		ReadBufferSize: 1024,
 		WriteBufferSize: 1024,
@@ -75,12 +53,47 @@ func WebsocketServer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Println("client connected", r.RemoteAddr);
-	players[clientCounter] = conn;
-	clientCounter += 1;
-	_, msg, err := conn.ReadMessage();
-	if err != nil {
-		log.Fatal("Read error.", err);
-		return;
+	// players[clientCounter] = conn;
+	// clientCounter += 1;
+	for {
+		// differentiate msg
+		// whether it is player movement msg or any other
+		_, msg, err := conn.ReadMessage();
+		if err != nil {
+			if websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
+				fmt.Println("Client disconnected gracefully")
+			} else {
+				fmt.Println("Read error:", err)
+			}
+		}
+		var gameMessage types.GameMessage;
+		err = json.Unmarshal(msg, &gameMessage);
+		if err != nil {
+			log.Println("Unmarshal error:", err);
+			continue;
+		}
+
+		switch(gameMessage.Type) {
+			case types.GameType:
+				gameMessage = Game(gameMessage, players);
+			case types.CommonType:
+				return;
+			default:
+				return;
+		}
+
+		// Marshal the response into a JSON string
+		responseBytes, err := json.Marshal(gameMessage)
+		if err != nil {
+			log.Println("Marshal error:", err)
+			continue
+		}
+
+		// Send the JSON string back to the client
+		err = conn.WriteMessage(websocket.TextMessage, responseBytes)
+		if err != nil {
+			log.Println("Write error:", err)
+			break
+		}
 	}
-	fmt.Println(string(msg), "message received successfully");
 }

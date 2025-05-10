@@ -1,15 +1,14 @@
-import { useEffect, useRef, useState } from "react";
-import { Utils } from "./utils";
+import { useContext, useEffect, useRef, useState } from "react";
 import { ball, paddle } from "./constants";
+import { GameContext } from "./App";
 
 const leftPaddle = { ...paddle },
 rightPaddle = { ...paddle }
 
-
 function Pong() {
+  const {socket, socketConnected} = useContext(GameContext);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [keys, setKeys] = useState<any>({}); // Track key states
-
+  const [keys, setKeys] = useState<any>({});
   // Handle key press
   useEffect(() => {
 		const abortController = new AbortController();
@@ -70,27 +69,6 @@ function Pong() {
       ctx?.clearRect(0, 0, canvas!.width, canvas!.height);
 
 			drawBall();
-			if(ball.x + ball.dx > canvas?.width! - ball.radius - rightPaddle.width) {
-				ball.dx = -ball.dx;
-			}
-
-			rightPaddle.y = ball.y - 10;
-
-			if (Utils.withinRange([leftPaddle.y, leftPaddle.y + leftPaddle.height], ball.y + ball.dy) && ball.x + ball.dx < leftPaddle.width + ball.radius ) {
-				ball.dy = -ball.dy
-				ball.dx = -ball.dx
-			}
-
-			if(ball.y + ball.dy < ball.radius || ball.y + ball.dy > canvas?.height! - ball.radius) {
-				ball.dy = -ball.dy;
-			} 
-
-			if(ball.x + ball.dx > canvas?.width! - ball.radius || ball.x + ball.dx < ball.radius) {
-				ball.dx = -ball.dx;
-			}
-
-			ball.x += ball.dx
-			ball.y += ball.dy
       ctx!.fillStyle = "white";
 			ctx?.fill();
       ctx?.fillRect(leftPaddle.x, leftPaddle.y, leftPaddle.width, leftPaddle.height);
@@ -100,11 +78,39 @@ function Pong() {
     function gameLoop() {
       update();
       draw();
+      socket?.send(JSON.stringify({id: 1, type: "gameType", payload: {
+        ball: ball,
+        leftPaddle: leftPaddle,
+        rightPaddle: rightPaddle,
+        canvas: {
+          width: canvas?.width,
+          height: canvas?.height
+        }
+      }}));
       requestAnimationFrame(gameLoop);
     }
 
-    gameLoop();
-  }, []);
+    if(socketConnected) gameLoop();
+    return () => {
+    }
+  }, [socketConnected]);
+
+
+  useEffect(() => {
+    if(socket?.OPEN && socketConnected) {
+      socket.onmessage = (message) => {
+        const { payload : { ball: newBall, leftPaddle: newLeftPaddle, rightPaddle: newRightPaddle }} = JSON.parse(message.data) as any;
+        ball.x = newBall.x
+        ball.y = newBall.y
+        ball.dx = newBall.dx
+        ball.dy = newBall.dy
+        leftPaddle.x = newLeftPaddle.x
+        leftPaddle.y = newLeftPaddle.y
+        rightPaddle.x = newRightPaddle.x
+        rightPaddle.y = newRightPaddle.y
+      }
+    }
+  }, [socketConnected])
 
   return <canvas ref={canvasRef} width={800} height={400} style={{ background: "black" }} />;
 };

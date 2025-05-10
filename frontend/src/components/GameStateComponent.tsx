@@ -4,7 +4,8 @@ import { Button } from "./Button"
 import { GameContext } from "../App";
 
 export function GameStateComponent() {
-  const {status, setStatus} = useContext(GameContext)
+  const {status, setStatus} = useContext(GameContext);
+
   function startGame() {
     setStatus(GameStatusEnum.inProgress)
   }
@@ -19,10 +20,19 @@ export function GameStateComponent() {
   }
 
   return (
-    <div className="flex  flex-col gap-2">
-      <Button handler={startGame} title="Start a Game" cls="bg-green-700 text-white p-2 rounded-xl cursor-pointer text-sm" />
-      <Button handler={pauseGame} title="Pause Game" cls="bg-blue-700 text-white p-2 rounded-xl cursor-pointer text-sm" /> 
-      <Button handler={endGame} title="End Game" cls="bg-red-700 text-white p-2 rounded-xl cursor-pointer text-sm" />
+    <div className="flex flex-col gap-2">
+      {
+        status === GameStatusEnum.notStarted && 
+        <Button handler={startGame} title="Start a Game" cls="bg-green-700 text-white p-2 rounded-xl cursor-pointer text-sm hover:bg-green-800" />
+      }
+      {
+        status === GameStatusEnum.inProgress && 
+        <Button handler={pauseGame} title="Pause Game" cls="bg-blue-700 text-white p-2 rounded-xl cursor-pointer text-sm hover:bg-blue-800" /> 
+      }
+      {
+        status === GameStatusEnum.inProgress && 
+        <Button handler={endGame} title="End Game" cls="bg-red-700 text-white p-2 rounded-xl cursor-pointer text-sm hover:bg-red-800" />
+      }
     </div>
   )
 }

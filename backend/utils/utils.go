@@ -10,6 +10,6 @@ func FindIndex[T any, X any](items []T, item X, compareFunc func(T, X) bool) int
 	return -1;
 }
 
-func WithinRange(givenRange []int, target int) bool {
+func WithinRange(givenRange []float32, target float32) bool {
 	return target > givenRange[0] && target < givenRange[1];
 }

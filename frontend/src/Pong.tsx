@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import { ball, paddle } from "./constants";
+import { ball, paddle, playgroundHeight, playGroundWidth } from "./constants";
 import { GameContext } from "./App";
 
 const leftPaddle = { ...paddle },
@@ -38,7 +38,7 @@ function Pong() {
     if (keys["ArrowDown"]) leftPaddle.targetY += leftPaddle.speed;
 
     // Prevent out-of-bounds movement
-    leftPaddle.targetY = Math.max(0, Math.min(400 - leftPaddle.height, leftPaddle.targetY));
+    leftPaddle.targetY = Math.max(0, Math.min(playgroundHeight - leftPaddle.height, leftPaddle.targetY));
   }, [keys]); // Only runs when keys change
 
   useEffect(() => {
@@ -78,7 +78,7 @@ function Pong() {
     function gameLoop() {
       update();
       draw();
-      socket?.send(JSON.stringify({id: 1, type: "gameType", payload: {
+      socket?.send(JSON.stringify({matchId: 1, type: "gameType", payload: {
         ball: ball,
         leftPaddle: leftPaddle,
         rightPaddle: rightPaddle,
@@ -112,7 +112,11 @@ function Pong() {
     }
   }, [socketConnected])
 
-  return <canvas ref={canvasRef} width={800} height={400} style={{ background: "black" }} />;
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <canvas ref={canvasRef} width={playGroundWidth} height={playgroundHeight} className="bg-[#1f1b1b] rounded" />;
+    </div>
+  )
 };
 
 export default Pong;

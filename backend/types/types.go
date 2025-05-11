@@ -19,7 +19,7 @@ type MessageType string;
 const (
 	GameType MessageType = "gameType"
 	CommonType MessageType = "commonType"
-	PaddleDisplacement int = 10
+	PaddleDisplacement float32 = 10
 )
 
 type Message struct {
@@ -29,28 +29,31 @@ type Message struct {
 }
 
 type Position struct {
-	X int `json:"x"`
-	Y int `json:"y"`
+	X float32 `json:"x"`
+	Y float32 `json:"y"`
 }
 
 type Paddle struct {
-	X int `json:"x"`
-	Y int `json:"y"`
-	Width int `json:"width"`
-	Height int `json:"height"`
+	X float32 `json:"x"`
+	Y float32 `json:"y"`
+	Width float32 `json:"width"`
+	Height float32 `json:"height"`
+	TargetY float32 `json:"targetY"`
+	Speed float32 `json:"speed"`
+	LerpFactor float32 `json:"lerpFactor"`
 }
 
 type Canvas struct {
-	Width int `json:"width"`
-	Height int `json:"height"`
+	Width float32 `json:"width"`
+	Height float32 `json:"height"`
 }
 
 type Ball struct {
-	Radius int `json:"radius"`
-	X int `json:"x"`
-	Y int `json:"y"`
-	Dx int `json:"dx"`
-	Dy int `json:"dy"`
+	Radius float32 `json:"radius"`
+	X float32 `json:"x"`
+	Y float32 `json:"y"`
+	Dx float32 `json:"dx"`
+	Dy float32 `json:"dy"`
 }
 
 type GamePayload struct {

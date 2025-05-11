@@ -5,3 +5,9 @@ export enum GameStatusEnum {
   paused = 'paused',
   end = 'end'
 }
+
+export enum ModalTypeEnum {
+  "gameInit" = "gameInit",
+  "gamePause" = "gamePause",
+  "gameEnd" = "gameEnd"
+}

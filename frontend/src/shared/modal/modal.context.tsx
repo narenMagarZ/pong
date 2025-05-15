@@ -1,9 +1,9 @@
-import React, { createContext, ReactNode } from "react";
+import React, { createContext, ReactNode, useState } from "react";
 import { Modal } from "./modal.view";
 import { ModalTypeEnum } from "../../enum";
 
 type ModalContextType = {
-  openModal: (content: ReactNode, title?: string) => void;
+  openModal: () => void;
   closeModal: () => void;
 };
 
@@ -15,10 +15,19 @@ interface ModalProviderProps {
 export const ModalContext = createContext<ModalContextType | undefined>(undefined)
 
 export const ModalProvider: React.FC<ModalProviderProps> = ({children}) => {
+  const [modal, setModal] = useState<boolean>(true);
+  const openModal = () => {
+    setModal(true);
+  }
+  const closeModal = () => {
+    setModal(false);
+  }
   return (
-    <ModalContext value={{openModal: () => {}, closeModal: () => {}}}>
+    <ModalContext value={{ openModal: openModal, closeModal: closeModal }}>
       {children}
-      <Modal type={ModalTypeEnum.gameInit} />
+      {
+        modal && <Modal type={ModalTypeEnum.gameInit}  />
+      }
     </ModalContext>
   )
 }

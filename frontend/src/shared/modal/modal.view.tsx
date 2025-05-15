@@ -58,7 +58,7 @@ class ModalStrategy {
 }
 
 interface modalProps {
-  type: ModalTypeEnum
+  type: ModalTypeEnum;
 }
 export function Modal({type}: modalProps) {
   const modalStrategy = new ModalStrategy(type);

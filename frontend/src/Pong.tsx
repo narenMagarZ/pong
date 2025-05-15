@@ -1,14 +1,18 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { ball, paddle, playgroundHeight, playGroundWidth } from "./constants";
-import { GameContext } from "./App";
+import { GameContext } from "@/Game";
+import { ModalContext } from "./shared/modal/modal.context";
+import { GameStatusEnum } from "./enum";
 
 const leftPaddle = { ...paddle },
 rightPaddle = { ...paddle }
 
 function Pong() {
-  const {socket, socketConnected} = useContext(GameContext);
+  const gameContext = useContext(GameContext);
+  const modalContext = useContext(ModalContext);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [keys, setKeys] = useState<any>({});
+  const requestRef = useRef<number>(null);
   // Handle key press
   useEffect(() => {
 		const abortController = new AbortController();
@@ -42,6 +46,10 @@ function Pong() {
   }, [keys]); // Only runs when keys change
 
   useEffect(() => {
+    if(gameContext?.status === GameStatusEnum.paused  && requestRef.current) {
+      cancelAnimationFrame(requestRef.current);
+      return;
+    };
     const canvas = canvasRef.current;
 		if(!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -78,7 +86,7 @@ function Pong() {
     function gameLoop() {
       update();
       draw();
-      socket?.send(JSON.stringify({matchId: 1, type: "gameType", payload: {
+      gameContext?.socket?.send(JSON.stringify({matchId: 1, type: "gameType", payload: {
         ball: ball,
         leftPaddle: leftPaddle,
         rightPaddle: rightPaddle,
@@ -87,30 +95,51 @@ function Pong() {
           height: canvas?.height
         }
       }}));
-      requestAnimationFrame(gameLoop);
+      requestRef.current = requestAnimationFrame(gameLoop);
     }
 
-    if(socketConnected) gameLoop();
+    if(gameContext?.socketState) gameLoop();
     return () => {
     }
-  }, [socketConnected]);
+  }, [gameContext?.socketState]);
 
 
   useEffect(() => {
-    if(socket?.OPEN && socketConnected) {
-      socket.onmessage = (message) => {
-        const { payload : { ball: newBall, leftPaddle: newLeftPaddle, rightPaddle: newRightPaddle }} = JSON.parse(message.data) as any;
-        ball.x = newBall.x
-        ball.y = newBall.y
-        ball.dx = newBall.dx
-        ball.dy = newBall.dy
-        leftPaddle.x = newLeftPaddle.x
-        leftPaddle.y = newLeftPaddle.y
-        rightPaddle.x = newRightPaddle.x
-        rightPaddle.y = newRightPaddle.y
+    if(gameContext) {
+      const { socketState, socket } = gameContext;
+      if(socket?.isConnected && socketState) {
+        socket.receive((message) => {
+          const { payload : { ball: newBall, leftPaddle: newLeftPaddle, rightPaddle: newRightPaddle }} = JSON.parse(message.data) as any;
+          ball.x = newBall.x
+          ball.y = newBall.y
+          ball.dx = newBall.dx
+          ball.dy = newBall.dy
+          leftPaddle.x = newLeftPaddle.x
+          leftPaddle.y = newLeftPaddle.y
+          rightPaddle.x = newRightPaddle.x
+          rightPaddle.y = newRightPaddle.y
+        })
       }
     }
-  }, [socketConnected])
+  }, [gameContext?.socketState])
+
+
+  useEffect(() => {
+		function handleKeyup(e: KeyboardEvent) {
+			if(e.code.toUpperCase() === 'ESCAPE') {
+        if(gameContext?.status === GameStatusEnum.inProgress) {
+          modalContext?.openModal();
+          gameContext.setStatus(GameStatusEnum.paused)
+        } else {
+          modalContext?.closeModal();
+        }
+			}
+		}
+		document.body.addEventListener("keydown", handleKeyup)
+		return () => { 
+			document.body.removeEventListener("keydown", handleKeyup);
+		}
+	}, [gameContext?.status])
 
   return (
     <div className="min-h-screen flex items-center justify-center">

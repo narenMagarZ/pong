@@ -1,45 +1,41 @@
-import { io, Socket } from "socket.io-client";
-
-// here we are using factory 
-export enum WebsocketEnum {
-  socket = 'socket'
-}
-
-interface WebsocketInterface {
+export interface SocketClientInterface {
   send: (message: string) => void;
   close: () => void;
-  receive: () => void;
+  receive: (cb: (message: MessageEvent) => void) => void;
+  isConnected: number;
 }
-
-class SocketClient implements WebsocketInterface {
+class SocketClient implements SocketClientInterface {
   private url: string;
-  private socket: Socket;
+  private socket: WebSocket;
+  private _isConnected: number;
   constructor() {
+    this._isConnected = 0;
     this.url = "ws://localhost:8088/ws";
-    this.socket = io(this.url, {
-      
-    });
+    this.socket = new WebSocket(this.url)
+    this.socket.onopen = () => {
+      this._isConnected = this.socket.OPEN;
+    }
   }  
+
   send(message: string){
     this.socket.send(message);
   }
+
   close(){
     this.socket.close();
   }
-  receive(){
-    this.socket.on("message" , (message) => {
-      console.log(message)
-    })
+
+  receive(cb: (message: MessageEvent) => void){
+    this.socket.onmessage = cb
   }
+
+  get isConnected() {
+    return this._isConnected;
+  }
+
 }
 
-export class WebsocketFactory {
-  public static create(client: WebsocketEnum) {
-    switch(client) {
-      case WebsocketEnum.socket:
-        return new SocketClient();
-      default:
-        throw new Error("Invalid websocket client");
-    }
-  }
-}
+
+export const socket = new SocketClient();
+
+
